@@ -1,8 +1,9 @@
 const { app, BrowserWindow } = require('electron');
 const serve = require('electron-serve');
+const serveFn = serve.default || serve;
 const path = require('path');
 
-const loadURL = serve({ directory: 'out' });
+const loadURL = serveFn({ directory: 'out' });
 
 function createWindow() {
   const win = new BrowserWindow({
