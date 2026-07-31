@@ -193,45 +193,63 @@ export const generateExcel = async (address, landData, images) => {
     { width: 15 }, { width: 12 }, { width: 8 }, { width: 20 }, 
     { width: 15 }, { width: 25 }, { width: 10 }, { width: 12 }, { width: 12 }, { width: 15 }, { width: 15 }
   ];
-  sheet3.mergeCells('A1:S2');
+  sheet3.mergeCells('A1:S1');
   const titleCell3 = sheet3.getCell('A1');
   titleCell3.value = '토 지 조 서';
   titleCell3.font = { size: 20, bold: true };
   titleCell3.alignment = { vertical: 'middle', horizontal: 'center' };
 
-  sheet3.getCell('A4').value = '■ 사업명 :';
-  sheet3.getCell('A5').value = '■ 사업시행자 :';
+  sheet3.views = [
+    { state: 'frozen', xSplit: 4, ySplit: 6 }
+  ];
+
+  sheet3.getCell('A2').value = '■ 사업명 :';
+  sheet3.getCell('A3').value = '■ 사업시행자 :';
+
 
   const headers0 = ['일련\n번호', '위치', '지번', '', '지목', '', '전체면적\n(m²)', '편입면적\n(m²)', '용도\n지역', '소유자', '', '', '', '', '', '', '관계인(이해관계인 등)', '', '특이사항'];
   const headers1 = ['', '', '당초', '편입', '원래\n지목', '편입\n지목', '', '', '', '성명', '지분', '토지 등기부 주소', '주민번호', '주민등록주소', '우편번호', '연락처', '성명', '권리관계', ''];
   
-  sheet3.getRow(7).values = headers0;
-  sheet3.getRow(8).values = headers1;
+  sheet3.getRow(5).values = headers0;
+  sheet3.getRow(6).values = headers1;
   
-  sheet3.mergeCells('A7:A8');
-  sheet3.mergeCells('B7:B8');
-  sheet3.mergeCells('C7:D7');
-  sheet3.mergeCells('E7:F7');
-  sheet3.mergeCells('G7:G8');
-  sheet3.mergeCells('H7:H8');
-  sheet3.mergeCells('I7:I8');
-  sheet3.mergeCells('J7:P7'); // 소유자 
-  sheet3.mergeCells('Q7:R7'); // 관계인
-  sheet3.mergeCells('S7:S8');
+  sheet3.mergeCells('A5:A6');
+  sheet3.mergeCells('B5:B6');
+  sheet3.mergeCells('C5:D5');
+  sheet3.mergeCells('E5:F5');
+  sheet3.mergeCells('G5:G6');
+  sheet3.mergeCells('H5:H6');
+  sheet3.mergeCells('I5:I6');
+  sheet3.mergeCells('J5:P5'); // 소유자 
+  sheet3.mergeCells('Q5:R5'); // 관계인
+  sheet3.mergeCells('S5:S6');
   
-  sheet3.getRow(9).values = [
+  sheet3.getRow(7).values = [
     '1', address, landData?.jibun, landData?.jibun, landData?.jimok, landData?.jimok, landData?.area, landData?.area, landData?.zoning,
     '', '', '', '', '', '', '', '', '', ''
   ];
   
-  applyBorder(sheet3, 7, 9, 1, 19);
+  sheet3.autoFilter = 'A6:S6';
+
+  applyBorder(sheet3, 5, 7, 1, 19);
   sheet3.eachRow((row, rowNumber) => {
-    if(rowNumber >= 7) {
+    if(rowNumber >= 5) {
       row.eachCell((cell) => {
         if(!cell.alignment) cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
       });
     }
   });
+
+  // 헤더(5, 6번 행) 배경색 지정 (연한 녹색)
+  for (let r = 5; r <= 6; r++) {
+    for (let c = 1; c <= 19; c++) {
+      sheet3.getCell(r, c).fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: 'FFD5E8D4' } // 캡쳐1과 유사한 연녹색
+      };
+    }
+  }
 
   const buffer = await workbook.xlsx.writeBuffer();
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });

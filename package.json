@@ -12,6 +12,7 @@
     "app:build": "next build && electron-builder"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "electron-serve": "^3.0.1"
   },
   "devDependencies": {

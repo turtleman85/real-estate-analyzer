@@ -13,6 +13,10 @@ export default function Home() {
   const [images, setImages] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
+  
+  // AI 분석 상태
+  const [analysisResult, setAnalysisResult] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // 대장 정보 (Mock 데이터)
   const [landData, setLandData] = useState({
@@ -74,6 +78,44 @@ export default function Home() {
   const removeImage = (index) => {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
+
+  const getBase64FromUrl = async (url) => {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  };
+
+  const handleAnalyzeImages = async () => {
+    if (images.length === 0) return;
+    setIsAnalyzing(true);
+    setAnalysisResult("");
+    
+    try {
+      const base64Images = await Promise.all(images.map(url => getBase64FromUrl(url)));
+      const res = await fetch('/api/analyze-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ images: base64Images })
+      });
+      
+      const data = await res.json();
+      if (res.ok) {
+        setAnalysisResult(data.analysis);
+      } else {
+        setAnalysisResult("분석 실패: " + data.error);
+      }
+    } catch (err) {
+      setAnalysisResult("분석 중 오류 발생");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
 
   return (
     <div className={styles.container}>
@@ -274,16 +316,22 @@ export default function Home() {
                   <span style={{ color: '#999', fontSize: '12px' }}>업로드된 사진 없음</span>
                 )}
               </div>
-              <div style={{ fontSize: '12px', background: '#fff', border: '1px solid #ddd', padding: '8px', borderRadius: '4px' }}>
-                <strong>💡 AI 구조 분석 코멘트 (Mock):</strong><br/>
-                {images.length > 0 ? (
-                  <>
-                    - 건축물: {images.length}장의 사진이 분석되었습니다.<br/>
-                    - 지붕: 슬레이트 재질 추정<br/>
-                    - 외벽: 콘크리트 및 양철 혼재
-                  </>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <button 
+                  className={`${styles.button} no-print`} 
+                  onClick={handleAnalyzeImages}
+                  disabled={images.length === 0 || isAnalyzing}
+                  style={{ width: '100%', fontSize: '14px', padding: '8px' }}
+                >
+                  {isAnalyzing ? "AI 분석 중..." : "AI 구조 분석하기"}
+                </button>
+              </div>
+              <div style={{ fontSize: '12px', background: '#fff', border: '1px solid #ddd', padding: '8px', borderRadius: '4px', minHeight: '80px' }}>
+                <strong>💡 AI 구조 분석 코멘트:</strong><br/>
+                {analysisResult ? (
+                  <div style={{ marginTop: '5px', whiteSpace: 'pre-wrap', lineHeight: '1.4' }}>{analysisResult}</div>
                 ) : (
-                  "사진을 업로드하면 분석결과가 표시됩니다."
+                  <span style={{ color: '#999', display: 'block', marginTop: '5px' }}>사진을 업로드하고 분석 버튼을 눌러주세요.</span>
                 )}
               </div>
             </div>
